@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.views import generic
 from django.utils import timezone
+from django.forms import inlineformset_factory
 
 from .models import Choice, Question
 
@@ -56,16 +57,42 @@ def vote(request, question_id):
         # user hits the Back button.
         return HttpResponseRedirect(reverse("polls:results", args=(question.id,)))
     
+ChoiceFormSet = inlineformset_factory(
+    Question,
+    Choice,
+    fields=("choice_text",),
+    extra=3,  # number of empty choice fields shown
+)
 class CreateView(generic.CreateView):
     model = Question
+    fields = ["question_text"]
     template_name = "polls/create.html"
-    fields = ["question_text"]  # only this field is filled by user
-          
-    def form_valid(self, form):
-        # set pub_date automatically
-        form.instance.pub_date = timezone.now()
-        return super().form_valid(form)
+    success_url = reverse_lazy("polls:index")
 
-    def get_success_url(self):
-        return reverse_lazy("polls:detail", args=[self.object.id])
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if self.request.POST:
+            context["formset"] = ChoiceFormSet(self.request.POST)
+        else:
+            context["formset"] = ChoiceFormSet()
+
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        formset = context["formset"]
+
+        if formset.is_valid():
+            self.object = form.save(commit=False)
+            self.object.pub_date = timezone.now()
+            self.object.save()
+
+            formset.instance = self.object  # link choices to question
+            formset.save()
+
+            return super().form_valid(form)
+
+        else:
+            return self.form_invalid(form)
 
