@@ -1,7 +1,7 @@
 from django.db.models import F
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.views import generic
 from django.utils import timezone
 
@@ -55,3 +55,17 @@ def vote(request, question_id):
         # with POST data. This prevents data from being posted twice if a
         # user hits the Back button.
         return HttpResponseRedirect(reverse("polls:results", args=(question.id,)))
+    
+class CreateView(generic.CreateView):
+    model = Question
+    template_name = "polls/create.html"
+    fields = ["question_text"]  # only this field is filled by user
+          
+    def form_valid(self, form):
+        # set pub_date automatically
+        form.instance.pub_date = timezone.now()
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("polls:detail", args=[self.object.id])
+

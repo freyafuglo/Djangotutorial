@@ -3,5 +3,6 @@ li a {
 }
 
 body {
-    background: white url("images/stars.jpeg") no-repeat;
+    background: url("images/stars.jpeg") no-repeat;
+    background-size: cover;
 }
