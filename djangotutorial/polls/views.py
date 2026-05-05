@@ -34,6 +34,7 @@ class DetailView(generic.DetailView):
 class ResultsView(generic.DetailView):
     model = Question
     template_name = "polls/results.html"
+    
 
 def vote(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
@@ -95,4 +96,13 @@ class CreateView(generic.CreateView):
 
         else:
             return self.form_invalid(form)
+        
+def piechart_test(request):
+    data = [5, 15, 25]
+    labels = ['Apples', 'Bananas', 'Oranges']
+
+    return render(request, "polls/piechart_test.html", {
+        'data': data,
+        'labels': labels
+    })
 

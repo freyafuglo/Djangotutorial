@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pie Chart Test</title>
+</head>
+<body>
+
+<h2>Pie Chart</h2>
+
+<div class="chart-container">
+    <canvas id="myPieChart"></canvas>
+</div>
+
+<style>
+.chart-container {
+    width: 300px;
+    height: 300px;
+    margin: auto;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const ctx = document.getElementById('myPieChart');
+
+    const data = {
+        labels: {{ labels|safe }},
+        datasets: [{
+            data: {{ data|safe }},
+            backgroundColor: ['red', 'blue', 'yellow']
+        }]
+    };
+
+    new Chart(ctx, {
+        type: 'pie',
+        data: data
+    });
+</script>
+
+</body>
+</html>
