@@ -34,6 +34,21 @@ class DetailView(generic.DetailView):
 class ResultsView(generic.DetailView):
     model = Question
     template_name = "polls/results.html"
+   
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        question = self.object
+        choices = question.choice_set.all()
+
+        labels = [choice.choice_text for choice in choices]
+        data = [choice.votes for choice in choices]
+
+        context["labels"] = labels
+        context["data"] = data
+
+        return context
     
 
 def vote(request, question_id):
