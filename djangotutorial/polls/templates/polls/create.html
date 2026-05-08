@@ -1,15 +1,45 @@
 <h1>Create Question</h1>
 
 <form method="post">
-    {% csrf_token %}
+  {% csrf_token %} {{ form.as_p }} {{ formset.management_form }}
 
-    {{ form.as_p }}
-
-    {{ formset.management_form }}
-
+  <div id="form-container">
     {% for form in formset %}
-        {{ form.as_p }}
+    <div class="choice-form">{{ form.as_p }}</div>
     {% endfor %}
+  </div>
 
-    <button type="submit">Save</button>
+  <!-- Hidden template form -->
+  <div id="empty-form" style="display: none">
+    <div class="choice-form">{{formset.empty_form.as_p}}</div>
+  </div>
+
+  <button type="button" id="add-choice">Add choice</button>
+
+  <button type="submit">Save</button>
 </form>
+
+<script id="add-choice-js">
+  document.addEventListener("DOMContentLoaded", function () {
+    const addButton = document.getElementById("add-choice");
+    const formContainer = document.getElementById("form-container");
+    const totalForms = document.getElementById("id_choice_set-TOTAL_FORMS");
+
+    //if (!totalForms) {
+    //    console.error("TOTAL_FORMS not found");
+      //  return;
+    //}
+
+    const emptyForm = document.getElementById("empty-form").innerHTML;
+
+    addButton.addEventListener("click", function () {
+        let formIndex = parseInt(totalForms.value);
+
+        let newForm = emptyForm.replace(/__prefix__/g, formIndex);
+
+        formContainer.insertAdjacentHTML("beforeend", newForm);
+
+        totalForms.value = formIndex + 1;
+    });
+});
+</script>

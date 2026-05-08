@@ -10,4 +10,5 @@ urlpatterns = [
     path("<int:question_id>/vote/", views.vote, name="vote"),
     path("create/", views.CreateView.as_view(), name="create"),
     path("piechart-test/", views.piechart_test, name="piechart_test"),
+    path("barchart-test/", views.barchart_test, name="barchart_test"),
 ]

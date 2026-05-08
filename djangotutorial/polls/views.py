@@ -77,7 +77,8 @@ ChoiceFormSet = inlineformset_factory(
     Question,
     Choice,
     fields=("choice_text",),
-    extra=3,  # number of empty choice fields shown
+    extra=1,  # number of empty choice fields shown
+    can_delete=False,
 )
 class CreateView(generic.CreateView):
     model = Question
@@ -117,6 +118,15 @@ def piechart_test(request):
     labels = ['Apples', 'Bananas', 'Oranges']
 
     return render(request, "polls/piechart_test.html", {
+        'data': data,
+        'labels': labels
+    })
+
+def barchart_test(request):
+    data = [5, 15, 25]
+    labels = ['Apples', 'Bananas', 'Oranges']
+
+    return render(request, "polls/barchart_test.html", {
         'data': data,
         'labels': labels
     })

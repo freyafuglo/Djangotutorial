@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+    <body>
+<div class="chart-container">
+    <canvas id="myBarChart"></canvas>
+</div>
+
+<style>
+.chart-container {
+    width: 300px;
+    height: 300px;
+    margin: auto;
+}
+</style>
+
+<button type="button" id="download">Download Chart</button>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const ctx = document.getElementById('myBarChart');
+
+    const data = {
+        labels: {{ labels|safe }},
+        datasets: [{
+            data: {{ data|safe }},
+            label: 'My Data',   // ✅ add this
+            backgroundColor: ['red', 'blue', 'yellow']
+        }]
+    };
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Chart.js Bar Chart'
+      }
+    }
+  },
+    });
+
+document.addEventListener("DOMContentLoaded", function () {
+   const downloadButton = document.getElementById("download");
+   const barChart = document.getElementById("myBarChart");
+
+   console.log(barChart)
+
+    downloadButton.addEventListener("click", function () {
+        //barChart.toDataURL();
+        const link = document.createElement('a');
+        link.href = barChart.toDataURL();
+        link.download = 'chart.png';
+        link.click();
+    });
+});
+    
+</script>
+
+
+
+
+    </body>
+</html>
