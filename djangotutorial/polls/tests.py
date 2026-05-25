@@ -4,7 +4,8 @@ from django.test import TestCase
 from django.utils import timezone
 from django.urls import reverse
 
-from .models import Question
+from .models import Question, Choice
+from .views import barchart_test
 
 def create_question(question_text, days):
         """
@@ -42,7 +43,6 @@ class QuestionModelTests(TestCase):
         time = timezone.now() - datetime.timedelta(hours=23, minutes=59, seconds=59)
         recent_question = Question(pub_date=time)
         self.assertIs(recent_question.was_published_recently(), True)
-
     
 class QuestionIndexViewTests(TestCase):
     def test_no_questions(self):
@@ -118,3 +118,61 @@ class QuestionDetailViewTests(TestCase):
         url = reverse("polls:detail", args=(past_question.id,))
         response = self.client.get(url)
         self.assertContains(response, past_question.question_text)
+
+class CreateViewTests(TestCase):
+
+    def test_create_question_with_choice(self):
+
+        payload_data = {
+            "question_text": "hej",
+
+            "choice_set-TOTAL_FORMS": 1,
+            "choice_set-INITIAL_FORMS": 0,
+            #"choice_set-MIN_NUM_FORMS": 0,
+            #"choice_set-MAX_NUM_FORMS": 1000,
+            "choice_set-0-choice_text": "hi",
+            #"choice_set-0-id": "",
+            #"choice_set-0-question": "",
+            #"choice_set-__prefix__-choice_text": "",
+            #"choice_set-__prefix__-id": "",
+            #"choice_set-__prefix__-question": "",          
+        }
+       
+        response = self.client.post(reverse("polls:create"), data=payload_data,)
+
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(Question.objects.count(), 1)
+        self.assertEqual(Choice.objects.count(), 1)
+    
+
+    def test_invalid_formset(self):
+
+        payload_data = {
+            "question_text": "hi",
+
+            "choice_set-TOTAL_FORMS": "hej",
+            "choice_set-INITIAL_FORMS": 0,
+            
+            "choice_set-0-choice_text": "hi",
+                   
+        }
+
+        response = self.client.post(reverse("polls:create"), data=payload_data,)
+
+        self.assertEqual(Question.objects.count(), 0)
+        self.assertEqual(Choice.objects.count(), 0)
+
+
+class BarPieTests(TestCase):
+    def test_piechart(self):
+
+        response = self.client.get(reverse("polls:piechart_test"))
+        self.assertEqual(response.status_code, 200)
+
+class BarChartTests(TestCase):
+    def test_barchart(self):
+
+        response = self.client.get(reverse("polls:barchart_test"))
+        self.assertEqual(response.status_code, 200)
+        #self.assertEqual(response)

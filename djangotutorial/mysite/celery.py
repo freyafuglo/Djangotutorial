@@ -19,3 +19,11 @@ app.autodiscover_tasks()
 @app.task(bind=True, ignore_result=True)
 def debug_task(self):
     print(f'Request: {self.request!r}')
+
+app.conf.beat_schedule = {
+    'add-every-40-seconds': {
+        'task': 'polls.tasks.print_questions',
+        'schedule': 40.0,
+    },
+}
+app.conf.timezone = 'Europe/Copenhagen'

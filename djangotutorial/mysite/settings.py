@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "debug_toolbar",
+    "django_celery_results",
+    
 ]
 
 MIDDLEWARE = [
@@ -116,3 +118,18 @@ STATIC_URL = "static/"
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+
+CELERY_RESULT_BACKEND = 'django-db'
+
+CELERY_BROKER_URL = 'amqp://guest:guest@localhost'
+
+# Celery Configuration Options
+CELERY_TIMEZONE = 'Europe/Copenhagen'
+
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+

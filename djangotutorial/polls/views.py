@@ -85,6 +85,7 @@ class CreateView(generic.CreateView):
     fields = ["question_text"]
     template_name = "polls/create.html"
     success_url = reverse_lazy("polls:index")
+    print("HERE")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -101,6 +102,7 @@ class CreateView(generic.CreateView):
         formset = context["formset"]
 
         if formset.is_valid():
+            print("VALID")
             self.object = form.save(commit=False)
             self.object.pub_date = timezone.now()
             self.object.save()
@@ -111,6 +113,9 @@ class CreateView(generic.CreateView):
             return super().form_valid(form)
 
         else:
+            print("INVALID")
+            print(formset.errors)
+            #print(dir(formset))
             return self.form_invalid(form)
         
 def piechart_test(request):

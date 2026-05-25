@@ -26,3 +26,10 @@ class Choice(models.Model):
     votes = models.IntegerField(default=0)
     def __str__(self):
         return self.choice_text
+    
+
+class Person(models.Model):
+    person_name = models.CharField(max_length=200)
+    age = models.IntegerField(default=0)
+    def __str__(self):
+        return self.person_name
