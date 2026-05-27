@@ -163,6 +163,63 @@ class CreateViewTests(TestCase):
         self.assertEqual(Question.objects.count(), 0)
         self.assertEqual(Choice.objects.count(), 0)
 
+    def test_non_post_request(self):
+        response = self.client.get(reverse("polls:create"))
+        self.assertEqual(response.status_code, 200)
+
+class VoteTests(TestCase):
+
+    def test_vote_increments_votes(self):
+
+       question = Question.objects.create(
+           question_text="Test question",
+           pub_date=timezone.now(),
+       )
+
+       choice = Choice.objects.create(
+           question=question,
+           choice_text="Choice 1",
+           votes=0,
+       )
+
+       payload_data = {
+            "choice": choice.id,
+                   
+        }
+
+       response = self.client.post(
+           reverse("polls:vote", args=(question.id,)),
+           data=payload_data
+
+       )
+
+       choice.refresh_from_db()
+
+       self.assertEqual(choice.votes, 1)
+       
+       self.assertRedirects(
+            response,
+            reverse("polls:results", args=(question.id,))
+        )
+
+    def test_vote_without_choice(self):
+
+        question = Question.objects.create(
+            question_text="Test question",
+            pub_date=timezone.now(),
+        )
+
+        response = self.client.post(
+            reverse("polls:vote", args=(question.id,)),
+            data={},
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(
+            response,
+            "select a choice.",
+        )
 
 class BarPieTests(TestCase):
     def test_piechart(self):
