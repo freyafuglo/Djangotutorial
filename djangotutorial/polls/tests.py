@@ -1,22 +1,29 @@
 import datetime
+import pytest
 
 from django.test import TestCase
 from django.utils import timezone
 from django.urls import reverse
 
-from .models import Question, Choice
+from .models import Question, Choice, Person
 from .views import barchart_test
+from mysite.celery import debug_task
+
+ 
 
 def create_question(question_text, days):
-        """
-        Create a question with the given `question_text` and published the
-        given number of `days` offset to now (negative for questions published
-        in the past, positive for questions that have yet to be published).
-        """
-        time = timezone.now() + datetime.timedelta(days=days)
-        return Question.objects.create(question_text=question_text, pub_date=time)
+    """
+    Create a question with the given `question_text` and published the
+    given number of `days` offset to now (negative for questions published
+    in the past, positive for questions that have yet to be published).
+    """
+    time = timezone.now() + datetime.timedelta(days=days)
+    return Question.objects.create(question_text=question_text, pub_date=time)
+       
         
+
 class QuestionModelTests(TestCase):
+    """ Question Model Tests """
     def test_was_published_recently_with_future_question(self):
         """
         was_published_recently() returns False for questions whose pub_date
@@ -45,6 +52,7 @@ class QuestionModelTests(TestCase):
         self.assertIs(recent_question.was_published_recently(), True)
     
 class QuestionIndexViewTests(TestCase):
+    """ Testing Question Index View """
     def test_no_questions(self):
         """
         If no questions exist, an appropriate message is displayed.
@@ -119,9 +127,15 @@ class QuestionDetailViewTests(TestCase):
         response = self.client.get(url)
         self.assertContains(response, past_question.question_text)
 
+
 class CreateViewTests(TestCase):
+    """ Testing Creating New Questions """
 
     def test_create_question_with_choice(self):
+        """ 
+        When the correct data for a question is forwared
+        Then a new question object should be created 
+        """
 
         payload_data = {
             "question_text": "hej",
@@ -147,6 +161,10 @@ class CreateViewTests(TestCase):
     
 
     def test_invalid_formset(self):
+        """ 
+        When attempting to create a new question with incorrect data
+        Then there shouldn't be a new question object created
+        """
 
         payload_data = {
             "question_text": "hi",
@@ -164,45 +182,60 @@ class CreateViewTests(TestCase):
         self.assertEqual(Choice.objects.count(), 0)
 
     def test_non_post_request(self):
+        """ 
+        When getting the create page
+        Then it should respond with status code 200
+        """
         response = self.client.get(reverse("polls:create"))
         self.assertEqual(response.status_code, 200)
 
 class VoteTests(TestCase):
+    """ Testing Voting on a Question """
 
     def test_vote_increments_votes(self):
+        """ 
+        When voting on a choice
+        And that choice is connected to a question
+        Then the 'votes' field for that choice for that question should be 1
+        """
 
-       question = Question.objects.create(
+        question = Question.objects.create(
            question_text="Test question",
            pub_date=timezone.now(),
        )
 
-       choice = Choice.objects.create(
+        choice = Choice.objects.create(
            question=question,
            choice_text="Choice 1",
            votes=0,
        )
 
-       payload_data = {
+        payload_data = {
             "choice": choice.id,
                    
         }
 
-       response = self.client.post(
+        response = self.client.post(
            reverse("polls:vote", args=(question.id,)),
            data=payload_data
 
        )
 
-       choice.refresh_from_db()
+        choice.refresh_from_db()
 
-       self.assertEqual(choice.votes, 1)
-       
-       self.assertRedirects(
-            response,
-            reverse("polls:results", args=(question.id,))
-        )
+        self.assertEqual(choice.votes, 1)
+        
+        self.assertRedirects(
+                response,
+                reverse("polls:results", args=(question.id,))
+            )
 
     def test_vote_without_choice(self):
+        """ 
+        When attempting to vote
+        But no choice is selected
+        Then a message should be displayed
+        """
 
         question = Question.objects.create(
             question_text="Test question",
@@ -222,14 +255,125 @@ class VoteTests(TestCase):
         )
 
 class BarPieTests(TestCase):
+    """ Testing Bar Pie """
     def test_piechart(self):
-
+        """ 
+        When on the Pie Chart page
+        Then the status code should be 200
+        """
         response = self.client.get(reverse("polls:piechart_test"))
         self.assertEqual(response.status_code, 200)
 
 class BarChartTests(TestCase):
+    """ Testing Bar Chart """
     def test_barchart(self):
-
+        """ 
+        When on the Bar Chart page
+        Then the status code should be 200
+        """
         response = self.client.get(reverse("polls:barchart_test"))
         self.assertEqual(response.status_code, 200)
         #self.assertEqual(response)
+
+
+#request database access
+#decorator to the whole test class: pytest.mark.django_db
+@pytest.mark.django_db
+class ModelsTests(TestCase):
+    """ Testing Models """
+    def test_str_question(self):
+        """ 
+        When calling the question string method
+        Then no errors should occur
+        """
+        question = Question.objects.create(
+            question_text="Test question",
+                pub_date=timezone.now(),)
+        question.__str__()
+
+    def test_str_choice(self):
+        """ 
+        When calling the choice string method
+        Then no errors should occur
+        """
+        question = Question.objects.create(
+            question_text="Test question",
+                pub_date=timezone.now(),)
+        choice = Choice.objects.create(
+            question=question,
+                choice_text="Choice 1",
+                    votes=0,
+        )
+        choice.__str__()
+
+    def test_str_person(self):
+        """ 
+        When calling the person string method
+        Then no errors should occur
+        """
+        person = Person.objects.create(
+            person_name="Freya",
+            age=25,
+        )
+        print(person)
+
+
+class CeleryTests(TestCase):
+    """ Testing Celery """
+    def test_debug_task(self):
+        """ 
+        When calling debug_task method
+        Then it should run without errors
+        """
+        debug_task()
+
+class ExportExcelTests(TestCase):
+     """ Testing Export of Excel File """
+     def test_export_excel_returns_file(self):
+        """ 
+        When triggering export_excel method
+        Then it should return the correct response type
+        And the content type should be an Excel file
+        And have the correct download header
+        """
+
+        question = Question.objects.create(
+            question_text="Test question",
+            pub_date=timezone.now(),
+        )
+
+        choice1 = Choice.objects.create(
+            question=question,
+            choice_text="A",
+            votes=3,
+        )
+
+        choice2 = Choice.objects.create(
+            question=question,
+            choice_text="B",
+            votes=7,
+        )
+
+        response = self.client.get(
+            reverse("polls:export_excel", args=(question.id,))
+        )
+
+        # 1. correct response type
+        self.assertEqual(response.status_code, 200)
+
+        # 2. correct content type (Excel file)
+        self.assertEqual(
+            response["Content-Type"],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+
+        # 3. correct download header
+        self.assertIn(
+            f"question_{question.id}.xlsx",
+            response["Content-Disposition"],
+        )
+         
+    
+   
+
+

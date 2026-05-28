@@ -23,6 +23,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<a href="{% url 'polls:export_excel' question.id %}">
+    Download Excel
+</a>
+
 <script>
     const ctx = document.getElementById('myPieChart');
 
@@ -38,4 +42,8 @@
         type: 'pie',
         data: data
     });
+
+ 
 </script>
+
+
