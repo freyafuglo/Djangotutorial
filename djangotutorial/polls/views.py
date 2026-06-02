@@ -189,6 +189,12 @@ class CreateView(generic.CreateView):
             #print(dir(formset))
             return self.form_invalid(form)
         
+class SearchView(generic.ListView):
+    model = Question
+    def get_queryset(self):
+        return Question.objects
+
+        
 def piechart_test(request):
     data = [5, 15, 25]
     labels = ['Apples', 'Bananas', 'Oranges']
