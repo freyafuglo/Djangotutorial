@@ -1,4 +1,6 @@
 import xlsxwriter
+from xlwt import Workbook
+from io import BytesIO
 from django.db.models import F
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -52,34 +54,72 @@ class ResultsView(generic.DetailView):
         return context
     
 def export_excel(request, question_id):
-
+        
         question = get_object_or_404(Question, pk=question_id)
 
-        #Tells the browser that the data being sent is an Excel (.xlsx) file
         response = HttpResponse(
-            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        content_type="application/vnd.ms-excel"
+)
 
-        #Tells the browser to download this file instead of opening it in the browser, and name it this filename
         response["Content-Disposition"] = (
-            f'attachment; filename="question_{question.id}.xlsx"'
-        )
+        f'attachment; filename="question_{question.id}.xls"'
+    )
 
-        workbook = xlsxwriter.Workbook(response)
-        worksheet = workbook.add_worksheet()
+        output = BytesIO()
 
-        worksheet.write(0, 0, f"Question: {question.question_text}")
+        #Create an object of the workbook
+        workbook = Workbook()
 
-        worksheet.write(2, 0, "Choice")
-        worksheet.write(2, 1, "Votes")
+        #Add sheet in workbook
+        sheet = workbook.add_sheet("Question Data")
+
+        sheet.write(0, 0, f"Question: {question.question_text}")
+
+        sheet.write(2, 0, "Choice")
+        sheet.write(2, 1, "Votes")
 
         for row, choice in enumerate(question.choice_set.all(), start=3):
-            worksheet.write(row, 0, choice.choice_text)
-            worksheet.write(row, 1, choice.votes)
+             sheet.write(row, 0, choice.choice_text)
+             sheet.write(row, 1, choice.votes)
 
-        workbook.close()
+        workbook.save(output)
+
+        response.write(output.getvalue())
+
+
+        #Now save the excel
+        #save_location = "path/to/your/working/directory/result.xls"
+        #excel.save(save_location)
 
         return response
+
+        # question = get_object_or_404(Question, pk=question_id)
+
+        # #Tells the browser that the data being sent is an Excel (.xlsx) file
+        # response = HttpResponse(
+        #     content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        # )
+
+        # #Tells the browser to download this file instead of opening it in the browser, and name it this filename
+        # response["Content-Disposition"] = (
+        #     f'attachment; filename="question_{question.id}.xlsx"'
+        # )
+
+        # workbook = xlsxwriter.Workbook(response)
+        # worksheet = workbook.add_worksheet()
+
+        # worksheet.write(0, 0, f"Question: {question.question_text}")
+
+        # worksheet.write(2, 0, "Choice")
+        # worksheet.write(2, 1, "Votes")
+
+        # for row, choice in enumerate(question.choice_set.all(), start=3):
+        #     worksheet.write(row, 0, choice.choice_text)
+        #     worksheet.write(row, 1, choice.votes)
+
+        # workbook.close()
+
+        # return response
     
 
 def vote(request, question_id):

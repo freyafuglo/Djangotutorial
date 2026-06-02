@@ -1,5 +1,7 @@
 import datetime
 import pytest
+import xlrd
+import os
 
 from django.test import TestCase
 from django.utils import timezone
@@ -329,14 +331,12 @@ class CeleryTests(TestCase):
 
 class ExportExcelTests(TestCase):
      """ Testing Export of Excel File """
-     def test_export_excel_returns_file(self):
+     def test_export_excel_returns_correct_data(self):
         """ 
         When triggering export_excel method
-        Then it should return the correct response type
-        And the content type should be an Excel file
-        And have the correct download header
+        Then the data (the content) within the excel file should match the actual data
         """
-
+        
         question = Question.objects.create(
             question_text="Test question",
             pub_date=timezone.now(),
@@ -358,20 +358,92 @@ class ExportExcelTests(TestCase):
             reverse("polls:export_excel", args=(question.id,))
         )
 
-        # 1. correct response type
-        self.assertEqual(response.status_code, 200)
+        book = xlrd.open_workbook(file_contents=response.content)
+        sheet = book.sheet_by_index(0)
 
-        # 2. correct content type (Excel file)
-        self.assertEqual(
-            response["Content-Type"],
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
+        # Check question title
+        self.assertEqual(sheet.cell_value(0, 0), "Question: Test question")
 
-        # 3. correct download header
-        self.assertIn(
-            f"question_{question.id}.xlsx",
-            response["Content-Disposition"],
-        )
+        # Check headers
+        self.assertEqual(sheet.cell_value(2, 0), "Choice")
+        self.assertEqual(sheet.cell_value(2, 1), "Votes")
+
+        # Check data rows
+        self.assertEqual(sheet.cell_value(3, 0), "A")
+        self.assertEqual(sheet.cell_value(3, 1), 3)
+
+        self.assertEqual(sheet.cell_value(4, 0), "B")
+        self.assertEqual(sheet.cell_value(4, 1), 7)
+
+
+        # def save_xl(response):
+        #     with open(f'question_{question.id}.xls', 'wb') as file:
+        #         file.write(response.content)
+        #         filename = f'question_{question.id}.xls'
+        #         print(filename)
+        #         book = xlrd.open_workbook(filename)
+        #         return file 
+
+        
+        # excel_file = save_xl(response)
+
+        #self.assertEqual(response, excel_file)
+    
+
+        #load excel file with python
+        
+        #book = xlrd.open_workbook("question_{question.id}.xls")
+        
+        #print(os.getcwd()+"\\"+excel_file)
+
+        
+
+
+
+
+    #  def test_export_excel_returns_file(self):
+    #     """ 
+    #     When triggering export_excel method
+    #     Then it should return the correct response type
+    #     And the content type should be an Excel file
+    #     And have the correct download header
+    #     """
+
+    #     question = Question.objects.create(
+    #         question_text="Test question",
+    #         pub_date=timezone.now(),
+    #     )
+
+    #     choice1 = Choice.objects.create(
+    #         question=question,
+    #         choice_text="A",
+    #         votes=3,
+    #     )
+
+    #     choice2 = Choice.objects.create(
+    #         question=question,
+    #         choice_text="B",
+    #         votes=7,
+    #     )
+
+    #     response = self.client.get(
+    #         reverse("polls:export_excel", args=(question.id,))
+    #     )
+
+    #     # 1. correct response type
+    #     self.assertEqual(response.status_code, 200)
+
+    #     # 2. correct content type (Excel file)
+    #     self.assertEqual(
+    #         response["Content-Type"],
+    #         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    #     )
+
+    #     # 3. correct download header
+    #     self.assertIn(
+    #         f"question_{question.id}.xlsx",
+    #         response["Content-Disposition"],
+    #     )
          
     
    
