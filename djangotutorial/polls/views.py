@@ -8,6 +8,7 @@ from django.urls import reverse, reverse_lazy
 from django.views import generic
 from django.utils import timezone
 from django.forms import inlineformset_factory
+from django import forms
 
 from .models import Choice, Question
 
@@ -189,10 +190,48 @@ class CreateView(generic.CreateView):
             #print(dir(formset))
             return self.form_invalid(form)
         
+    
+
+
+class NameForm(forms.Form):
+    your_name = forms.CharField(label="Your name", max_length=100)
+
+
+def get_name(request):
+
+    if request.method == "POST":
+
+        search_term = request.POST.get("search", "")
+
+        question_list = Question.objects.filter(
+            question_text__icontains=search_term
+        )
+
+        return render(
+            request,
+            "polls/search_list.html",
+            {"question_list": question_list},
+        )
+
+    return render(
+        request,
+        "polls/search.html",
+    )
+        
 class SearchView(generic.ListView):
     model = Question
-    def get_queryset(self):
-        return Question.objects
+    fields = ["question_text"]
+    template_name = "polls/search.html"
+    success_url = reverse_lazy("polls:index")
+
+   
+    
+        
+    # model = Question
+    # template_name = "polls/search.html"
+    # context_object_name = "latest_question_list"
+    # def get_queryset(self):
+    #     return Question.objects.filter(pub_date__lte=timezone.now()).order_by("-pub_date")
 
         
 def piechart_test(request):
