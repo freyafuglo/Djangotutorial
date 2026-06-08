@@ -1,17 +1,18 @@
 {% load static %}
 
 
-<h1>Create Question</h1>
+<h1>Search for Question</h1>
 
-
-    
- <form  method="post">
+<form method="post">
     {% csrf_token %}
-    <label for="your_name">Your name: </label>
-    <input id="search" type="text" name="search" value="{{ current_name }}">
+    {% if form.errors %}
+    <div style="color:red" class="alert alert-danger">
+        {{ form.errors }}
+    </div>
+    {% endif %}
+    {{ form.as_p }}
     <input type="submit" value="OK">
 </form>
-
 
 
 

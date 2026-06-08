@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.urls import reverse
 
 from .models import Question, Choice, Person
-from .views import barchart_test
+from .views import barchart_test, SearchForm
 from mysite.celery import debug_task
 
  
@@ -445,7 +445,81 @@ class ExportExcelTests(TestCase):
     #         response["Content-Disposition"],
     #     )
          
+
+class SearchTests(TestCase):
+    """ Testing Searching for Questions """
+    def test_search_question_list(self):
+        """ 
+        When searching for a question by 3 or more characters
+        Then it should return a list of questions, containing that sequence of characters
+        """
+
+        #need new question objects for the test
+        question = Question.objects.create(
+           question_text="Test question",
+           pub_date=timezone.now(),
+       )
+        
+        payload_data = {
+            "search": "que",
+        }
+
+        response = self.client.post(
+           reverse("polls:search"),
+           data=payload_data
+       )
+        
+        self.assertQuerySetEqual(response.context["question_list"], [question]),
     
-   
+    def test_before_searching(self):
+        """ 
+        When entering the search page
+        Then the SearchForm() should be present
+        """
 
+        form = SearchForm()
 
+        response = self.client.get(
+           reverse("polls:search"),
+       )        
+        
+        self.assertContains(
+            response,
+            "Search"),
+
+    def test_search_question_list_empty_string(self):
+        """ 
+        When searching for a question with an empty string
+        Then a validation error should be thrown
+        """
+        payload_data = {
+            "search": "",       
+        }
+
+        response = self.client.post(
+           reverse("polls:search"),
+           data=payload_data
+       )
+        
+        self.assertContains(
+            response,
+            "Empty string"),
+
+    def test_search_question_list_two_characters(self):
+        """ 
+        When searching for a question less than three characters
+        Then a validation error should be thrown
+        """
+
+        payload_data = {
+            "search": "qu",       
+        }
+
+        response = self.client.post(
+           reverse("polls:search"),
+           data=payload_data
+       )
+        
+        self.assertContains(
+            response,
+            "Enter more characters in your search term"),

@@ -9,6 +9,7 @@ from django.views import generic
 from django.utils import timezone
 from django.forms import inlineformset_factory
 from django import forms
+from django.core.exceptions import ValidationError
 
 from .models import Choice, Question
 
@@ -193,36 +194,64 @@ class CreateView(generic.CreateView):
     
 
 
-class NameForm(forms.Form):
-    your_name = forms.CharField(label="Your name", max_length=100)
+class SearchForm(forms.Form):
+    #In HTML, it becomes <input type="text" name="search">
+    search = forms.CharField(
+        label="Search",
+        max_length=100,
+        required=False
+    )
 
+    #field name is search, therefore the method name becomes clean_ followed by that field name
+    def clean_search(self):
+        data = self.cleaned_data["search"]
 
-def get_name(request):
+        if not data:
+            raise ValidationError("Empty string")
+        
+        if len(data) < 3:
+            raise ValidationError("Enter more characters in your search term")
+
+        # Always return a value to use as the new cleaned data, even if
+        # this method didn't change it.
+        return data
+
+def get_question_list(request):
 
     if request.method == "POST":
+        form = SearchForm(request.POST)
 
-        search_term = request.POST.get("search", "")
+        if form.is_valid():
+            search_term = form.cleaned_data["search"]
 
-        question_list = Question.objects.filter(
-            question_text__icontains=search_term
-        )
+           
 
-        return render(
-            request,
-            "polls/search_list.html",
-            {"question_list": question_list},
-        )
+            question_list = Question.objects.filter(
+                question_text__icontains=search_term
+            )
+        
+
+            return render(
+                request,
+                "polls/search_list.html",
+                {"question_list": question_list},
+            )
+
+
+    else:
+        form = SearchForm()
 
     return render(
         request,
         "polls/search.html",
+        {"form": form},
     )
         
-class SearchView(generic.ListView):
-    model = Question
-    fields = ["question_text"]
-    template_name = "polls/search.html"
-    success_url = reverse_lazy("polls:index")
+# class SearchView(generic.ListView):
+#     model = Question
+#     fields = ["question_text"]
+#     template_name = "polls/search.html"
+#     success_url = reverse_lazy("polls:index")
 
    
     
