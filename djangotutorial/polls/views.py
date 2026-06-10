@@ -202,6 +202,16 @@ class SearchForm(forms.Form):
         required=False
     )
 
+    ORDER_CHOICES = [
+        ('1', 'Alphabetical order'),
+        ('2', 'Reverse alphabetical order'),
+    ]
+    
+    order = forms.ChoiceField(
+        widget=forms.RadioSelect,
+        choices=ORDER_CHOICES, 
+    )
+
     #field name is search, therefore the method name becomes clean_ followed by that field name
     def clean_search(self):
         data = self.cleaned_data["search"]
@@ -223,20 +233,24 @@ def get_question_list(request):
 
         if form.is_valid():
             search_term = form.cleaned_data["search"]
-
-           
+          
 
             question_list = Question.objects.filter(
                 question_text__icontains=search_term
             )
-        
 
+            
+            if form.cleaned_data["order"] == "1":
+                sorted_list = question_list.order_by("question_text")
+            elif form.cleaned_data["order"] == "2":
+                sorted_list = question_list.order_by("question_text").reverse()
+
+        
             return render(
                 request,
                 "polls/search_list.html",
-                {"question_list": question_list},
+                {"question_list": sorted_list},
             )
-
 
     else:
         form = SearchForm()
