@@ -462,6 +462,7 @@ class SearchTests(TestCase):
         
         payload_data = {
             "search": "que",
+            "order": "1"
         }
 
         response = self.client.post(
@@ -470,6 +471,73 @@ class SearchTests(TestCase):
        )
         
         self.assertQuerySetEqual(response.context["question_list"], [question]),
+    
+    def test_search_question_list_reverse_order(self):
+        """ 
+        When searching for a question by 3 or more characters
+        And 'reverse order' is selected
+        Then it should return the question list in reverse alphabetical order
+        """
+        #need new question objects for the test
+        question = Question.objects.create(
+           question_text="Test question",
+           pub_date=timezone.now(),
+       )
+        
+        question2 = Question.objects.create(
+           question_text="BTest question",
+           pub_date=timezone.now(),
+       )
+        
+        question3 = Question.objects.create(
+           question_text="ATest question",
+           pub_date=timezone.now(),
+       )
+        
+        question_list = Question.objects.all()
+           
+        
+        reversed_question_list = question_list.order_by("question_text").reverse()
+        
+        payload_data = {
+            "search": "que",
+            "order": "2"
+        }
+
+        response = self.client.post(
+           reverse("polls:search"),
+           data=payload_data
+       )
+        
+        self.assertQuerySetEqual(response.context["question_list"], reversed_question_list)
+
+    def test_search_question_list_with_another_option(self):
+        """ 
+        When searching for a question by 3 or more characters
+        And a value for 'order' with no logic attached to it is selected
+        It should run without errors
+        """
+        #need new question objects for the test
+        question = Question.objects.create(
+           question_text="Test question",
+           pub_date=timezone.now(),
+       )
+        
+        payload_data = {
+            "search": "que",
+            "order": "3"
+        }
+
+        response = self.client.post(
+           reverse("polls:search"),
+           data=payload_data
+       )
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "No polls"),
+
     
     def test_before_searching(self):
         """ 
