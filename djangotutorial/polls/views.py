@@ -205,7 +205,8 @@ class SearchForm(forms.Form):
     ORDER_CHOICES = [
         ('1', 'Alphabetical order'),
         ('2', 'Reverse alphabetical order'),
-        ('3', 'Nothing')
+        ('3', 'Random order'),
+        ('4', 'Nothing')
     ]
     
     order = forms.ChoiceField(
@@ -247,6 +248,8 @@ def get_question_list(request):
             elif form.cleaned_data["order"] == "2":
                 sorted_list = question_list.order_by("question_text").reverse()
                 print("second")
+            elif form.cleaned_data["order"] == "3":
+                sorted_list = question_list.order_by("?")
             else:
                 sorted_list = []
 

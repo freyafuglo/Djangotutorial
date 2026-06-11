@@ -485,12 +485,12 @@ class SearchTests(TestCase):
        )
         
         question2 = Question.objects.create(
-           question_text="BTest question",
+           question_text="ATest question",
            pub_date=timezone.now(),
        )
         
         question3 = Question.objects.create(
-           question_text="ATest question",
+           question_text="BTest question",
            pub_date=timezone.now(),
        )
         
@@ -509,7 +509,52 @@ class SearchTests(TestCase):
            data=payload_data
        )
         
+        print(list(response.context["question_list"]))
+        print(list(reversed_question_list))
+        
         self.assertQuerySetEqual(response.context["question_list"], reversed_question_list)
+
+    
+    def test_search_question_list_random_order(self):
+        """ 
+        When searching for a question by 3 or more characters
+        And 'random order' is selected
+        Then it should return the question list in random alphabetical order
+        """
+        #need new question objects for the test
+        question = Question.objects.create(
+           question_text="Test question",
+           pub_date=timezone.now(),
+       )
+        
+        question2 = Question.objects.create(
+           question_text="BTest question",
+           pub_date=timezone.now(),
+       )
+        
+        question3 = Question.objects.create(
+           question_text="ATest question",
+           pub_date=timezone.now(),
+       )
+        
+        #question_list = Question.objects.all()
+        
+        payload_data = {
+            "search": "que",
+            "order": "3"
+        }
+
+        response = self.client.post(
+           reverse("polls:search"),
+           data=payload_data
+       )
+        
+        result = set(response.context["question_list"])
+
+        expected = {question, question2, question3}
+
+        self.assertEqual(result, expected)
+        
 
     def test_search_question_list_with_another_option(self):
         """ 
@@ -525,7 +570,7 @@ class SearchTests(TestCase):
         
         payload_data = {
             "search": "que",
-            "order": "3"
+            "order": "4"
         }
 
         response = self.client.post(
