@@ -6,6 +6,10 @@ import os
 from django.test import TestCase
 from django.utils import timezone
 from django.urls import reverse
+from django.test.utils import CaptureQueriesContext
+from django.db import connection
+
+
 
 from .models import Question, Choice, Person
 from .views import barchart_test, SearchForm
@@ -317,7 +321,7 @@ class ModelsTests(TestCase):
             person_name="Freya",
             age=25,
         )
-        print(person)
+        #print(person)
 
 
 class CeleryTests(TestCase):
@@ -509,8 +513,8 @@ class SearchTests(TestCase):
            data=payload_data
        )
         
-        print(list(response.context["question_list"]))
-        print(list(reversed_question_list))
+        #print(list(response.context["question_list"]))
+        #print(list(reversed_question_list))
         
         self.assertQuerySetEqual(response.context["question_list"], reversed_question_list)
 
@@ -538,22 +542,47 @@ class SearchTests(TestCase):
        )
         
         #question_list = Question.objects.all()
-        
+
         payload_data = {
             "search": "que",
             "order": "3"
         }
 
-        response = self.client.post(
-           reverse("polls:search"),
-           data=payload_data
-       )
+
+        with CaptureQueriesContext(connection) as ctx:
+            response = self.client.post(
+            reverse("polls:search"),
+            data=payload_data
+        )
+
+        # ctx.captured_queries is a list of dicts
+        for i, query in enumerate(ctx.captured_queries):
+            sql_query = query["sql"]
+            print(sql_query)
+            print(i)
+            print(query["time"])
         
         result = set(response.context["question_list"])
 
         expected = {question, question2, question3}
 
+        sql_statement = ctx.captured_queries[0]
+
+        #print(sql_statement.items())
+
+        for key, value in sql_statement.items():
+            print(key)
+        
+        sql = sql_statement.get("sql")
+
+        print(sql)
+
+
         self.assertEqual(result, expected)
+
+        self.assertIn("ORDER BY RAND() ASC", sql)
+
+      
         
 
     def test_search_question_list_with_another_option(self):

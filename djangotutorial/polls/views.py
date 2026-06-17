@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.forms import inlineformset_factory
 from django import forms
 from django.core.exceptions import ValidationError
+from django.http import JsonResponse
 
 from .models import Choice, Question
 
@@ -158,7 +159,7 @@ class CreateView(generic.CreateView):
     fields = ["question_text"]
     template_name = "polls/create.html"
     success_url = reverse_lazy("polls:index")
-    print("HERE")
+    #print("HERE")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -175,7 +176,7 @@ class CreateView(generic.CreateView):
         formset = context["formset"]
 
         if formset.is_valid():
-            print("VALID")
+            #print("VALID")
             self.object = form.save(commit=False)
             self.object.pub_date = timezone.now()
             self.object.save()
@@ -186,7 +187,7 @@ class CreateView(generic.CreateView):
             return super().form_valid(form)
 
         else:
-            print("INVALID")
+            #print("INVALID")
             print(formset.errors)
             #print(dir(formset))
             return self.form_invalid(form)
@@ -244,23 +245,27 @@ def get_question_list(request):
             
             if form.cleaned_data["order"] == "1":
                 sorted_list = question_list.order_by("question_text")
-                print("first")
+                #print("first")
             elif form.cleaned_data["order"] == "2":
                 sorted_list = question_list.order_by("question_text").reverse()
-                print("second")
+                #print("second")
             elif form.cleaned_data["order"] == "3":
                 sorted_list = question_list.order_by("?")
             else:
                 sorted_list = []
 
         
-            print("anything")
+            #print("anything")
 
-            return render(
-                request,
-                "polls/search_list.html",
-                {"question_list": sorted_list},
-            )
+            return JsonResponse({
+                "question_list": [
+                    {
+                        "id": question.id,
+                        "question_text": question.question_text,
+                    }
+                    for question in sorted_list
+                ]
+            })
 
     else:
         form = SearchForm()
