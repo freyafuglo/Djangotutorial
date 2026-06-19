@@ -16,10 +16,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import routers
+from quickstart import views
 from debug_toolbar.toolbar import debug_toolbar_urls
 
+router = routers.DefaultRouter()
+router.register(r"users", views.UserViewSet)
+router.register(r"groups", views.GroupViewSet, basename="xuser")
 
+# Wire up our API using automatic URL routing.
+# Additionally, we include login URLs for the browsable API.
 urlpatterns = [
+    path("", include(router.urls)),
+    path("", include("snippets.urls")),
     path("polls/", include("polls.urls")),
     path("admin/", admin.site.urls),
+    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ] + debug_toolbar_urls()

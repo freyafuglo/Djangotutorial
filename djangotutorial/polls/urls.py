@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 
 from . import views
 
@@ -14,5 +14,6 @@ urlpatterns = [
 
     path("piechart-test/", views.piechart_test, name="piechart_test"),
     path("barchart-test/", views.barchart_test, name="barchart_test"),
+  
     
 ]
