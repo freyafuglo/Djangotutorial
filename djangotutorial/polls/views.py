@@ -257,15 +257,11 @@ def get_question_list(request):
         
             #print("anything")
 
-            return JsonResponse({
-                "question_list": [
-                    {
-                        "id": question.id,
-                        "question_text": question.question_text,
-                    }
-                    for question in sorted_list
-                ]
-            })
+            return render(
+                request,
+                "polls/search_list.html",
+                {"question_list": sorted_list},
+            )
 
     else:
         form = SearchForm()
