@@ -324,6 +324,20 @@ class ModelsTests(TestCase):
         #print(person)
 
 
+class PersonTests(TestCase):
+     """ Testing Person """
+     def test_person(self):
+        """ 
+        When printing person
+        Then a string should be printed
+        """
+        person = Person.objects.create(
+            person_name="Freya",
+            age=25,
+        )
+         
+        print(person)
+
 class CeleryTests(TestCase):
     """ Testing Celery """
     def test_debug_task(self):
