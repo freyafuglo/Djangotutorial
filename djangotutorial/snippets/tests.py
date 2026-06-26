@@ -27,7 +27,7 @@ class SnippetTests(TestCase):
        )
 
         response = self.client.get(
-           reverse("snippets:index"),
+           reverse("snippets:snippet-list"),
        )
         
         self.assertEqual(response.status_code, 200)
@@ -57,7 +57,7 @@ class SnippetTests(TestCase):
 
 
         response = self.client.post(
-           reverse("snippets:index"), data=payload_data
+           reverse("snippets:snippet-list"), data=payload_data
        )
         
         print("status:", response.status_code)
@@ -82,8 +82,15 @@ class SnippetTests(TestCase):
             "style": "friendly"
         }
 
+        user = User.objects.create_user(
+        username="admin",
+        password="secret"
+    )
+        
+        self.client.force_login(user)
+
         response = self.client.post(
-           reverse("snippets:index"), data=payload_data,
+           reverse("snippets:snippet-list"), data=payload_data,
        )
         
         self.assertEqual(response.status_code, 400)
@@ -106,7 +113,7 @@ class SnippetTests(TestCase):
         code="print(123)"
     )
         response = self.client.get(
-           reverse("snippets:detail", kwargs={"pk": snippet.pk}),
+           reverse("snippets:snippet-detail", kwargs={"pk": snippet.pk}),
        )
         
         self.assertEqual(response.status_code, 200)
@@ -128,7 +135,7 @@ class SnippetTests(TestCase):
         code="print(123)"
     )
         response = self.client.get(
-           reverse("snippets:detail", kwargs={"pk": 2}),
+           reverse("snippets:snippet-detail", kwargs={"pk": 2}),
        )
         
         self.assertEqual(response.status_code, 404)
@@ -143,7 +150,7 @@ class SnippetTests(TestCase):
         username="admin",
         password="secret"
     )
-        
+        self.client.force_login(user)
 
         snippet = Snippet.objects.create(
         owner=user,
@@ -159,7 +166,7 @@ class SnippetTests(TestCase):
         }
 
         response = self.client.put(
-           reverse("snippets:detail", kwargs={"pk": snippet.pk}), data=payload_data, content_type="application/json",)
+           reverse("snippets:snippet-detail", kwargs={"pk": snippet.pk}), data=payload_data, content_type="application/json",)
        
         
         self.assertEqual(response.status_code, 200)
@@ -176,6 +183,7 @@ class SnippetTests(TestCase):
         password="secret"
     )
 
+        self.client.force_login(user)
 
         snippet = Snippet.objects.create(
         owner=user,
@@ -190,7 +198,7 @@ class SnippetTests(TestCase):
         }
 
         response = self.client.put(
-           reverse("snippets:detail", kwargs={"pk": snippet.pk}), data=payload_data, content_type="application/json",)
+           reverse("snippets:snippet-detail", kwargs={"pk": snippet.pk}), data=payload_data, content_type="application/json",)
               
         self.assertEqual(response.status_code, 400)
 
@@ -210,12 +218,73 @@ class SnippetTests(TestCase):
         owner=user,
         code="print(123)"
     )
+        self.client.force_login(user)
 
         response = self.client.delete(
-            reverse("snippets:detail", kwargs={"pk": snippet.pk})
+            reverse("snippets:snippet-detail", kwargs={"pk": snippet.pk})
         )
 
         self.assertEqual(response.status_code, 204)
 
+    def test_snippet_highlight(self):
+        """
+        Given an existing snippet
+        When highlight is triggered
+        A highlighted snippet should be returned
+        """
+
+        user = User.objects.create_user(
+        username="admin",
+        password="secret"
+    )
+
+        snippet = Snippet.objects.create(
+        owner=user,
+        code="print(123)",
+       )
+
+        response = self.client.get(
+           reverse("snippets:snippet-highlight", kwargs={"pk": snippet.pk} ),
+       )
+        
+        self.assertEqual(response.status_code, 200)
+
+    def test_snippet_(self):
+
+        """
+        Given an existing snippet
+        When highlight is triggered
+        A highlighted snippet should be returned
+        """
+
+        user = User.objects.create_user(
+        username="admin",
+        password="secret"
+    )
+
+        snippet = Snippet.objects.create(
+        owner=user,
+        code="print(123)",
+       )
+
+        response = self.client.get(
+           reverse("snippets:snippet-highlight", kwargs={"pk": snippet.pk} ),
+       )
+        
+        self.assertEqual(response.status_code, 200)
+
        
-       
+class ApiRootTests(TestCase):
+    def test_api_root_get(self):
+        """
+        Given the API root endpoint
+        When a GET request is made
+        Then the URLs for the users and snippets endpoints should be returned.
+        """
+
+        response = self.client.get(
+            reverse("snippets:root")
+        )
+
+        self.assertEqual(response.status_code, 200)
+        
